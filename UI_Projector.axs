@@ -203,7 +203,7 @@ DEFINE_EVENT
 
     data_event[vdvDevice]
     {
-	command:
+	string:
 	{
 	    stack_var char sFeedback[256]
 	    sFeedback = data.text
