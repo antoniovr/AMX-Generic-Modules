@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 07/15/2019  AT: 08:32:00        *)
+(*  FILE_LAST_MODIFIED_ON: 09/11/2019  AT: 09:41:56        *)
 (***********************************************************)
 
 MODULE_NAME='Projector_UI'(dev vdvDevice,
@@ -18,8 +18,8 @@ MODULE_NAME='Projector_UI'(dev vdvDevice,
 			    
 			   integer anBtnOthers[])
 
-#include 'EarAPI.axi'
-#include 'SNAPI.axi'
+#include 'CUSTOMAPI'
+#include 'SNAPI'
 
 DEFINE_CONSTANT
 
@@ -278,5 +278,5 @@ DEFINE_EVENT
     }
 
 (***********************************************************)
-(*		    	EARPRO 2019   			   *)
+(*		    	END OF PROGRAM			   *)
 (***********************************************************) 

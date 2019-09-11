@@ -6,7 +6,7 @@
 (*  FILE CREATED ON: 09/10/2019  AT: 11:29:06              *)
 (***********************************************************)
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/10/2019  AT: 11:49:09        *)
+(*  FILE_LAST_MODIFIED_ON: 09/11/2019  AT: 09:42:41        *)
 (***********************************************************)
 
 (***********************************************************)
@@ -14,7 +14,8 @@
 (***********************************************************)
 
 #include 'SNAPI'
-#include 'EarApi'
+#include 'CUSTOMAPI'
+
 
 DEFINE_CONSTANT
 
@@ -36,6 +37,7 @@ DEFINE_VARIABLE
 (***********************************************************)
 DEFINE_START
 
+    //translate_device(vdvDeviceToTranslate,vdvDevice)
     timeline_create(_TLID,lTimes,1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
     
     define_function fnFeedback()
@@ -46,9 +48,12 @@ DEFINE_START
 	    [dvTp,anBtnInputs[i]] = (nInputSelected == i)
 	}
 	
-	for(i=1;i<=max_length_array(anBtnOutputs);i++)
+	if(nInputSelected)
 	{
-	    
+	    for(i=1;i<=max_length_array(anBtnOutputs);i++)
+	    {
+		[dvTp,anBtnOutputs[i]] = (anOutputStatus[i] == nInputSelected)
+	    }
 	}
     }
 
@@ -56,6 +61,31 @@ DEFINE_START
 (*                THE EVENTS GO BELOW                      *)
 (***********************************************************)
 DEFINE_EVENT
+
+    button_event[dvTp,anBtnInputs]
+    {
+	push:
+	{
+	    nInputSelected = get_last(anBtnInputs)	    
+	}
+    }
+    
+    button_event[dvTp,anBtnOutputs]
+    {
+	push:
+	{
+	    stack_var integer nPush
+	    nPush = get_last(anBtnOutputs)
+	    if(anOutputStatus[nPush] != nInputSelected)
+	    {
+		send_command vdvDevice,"'CI',itoa(nInputSelected),'O',itoa(nPush)"
+	    }
+	    else
+	    {
+		//send_command vdvDevice,"'CI0O',itoa(nPush)"
+	    }
+	}
+    }
 
     data_event[vdvDevice]
     {
@@ -82,8 +112,8 @@ DEFINE_EVENT
 			nInput = atoi(sInput)
 			sOutput = sHeader
 			nOutput = atoi(sOutput)
-			fnInfo("'sInput vale: ',sInput")
-			fnInfo("'sOutput vale: ',sOutput")
+			fnInfo("'UI sInput vale: ',sInput")
+			fnInfo("'UI sOutput vale: ',sOutput")
 			anOutputStatus[nOutput] = nInput
 		    }	  
 		}
@@ -98,5 +128,5 @@ DEFINE_EVENT
 
 
 (***********************************************************)
-(*		    	EARPRO 2019   			   *)
+(*		    	END OF PROGRAM			   *)
 (***********************************************************) 
