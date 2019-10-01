@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/11/2019  AT: 09:41:34        *)
+(*  FILE_LAST_MODIFIED_ON: 09/28/2019  AT: 21:06:31        *)
 (***********************************************************)
 
 MODULE_NAME='Display_UI'(dev vdvDevice,
@@ -14,6 +14,21 @@ MODULE_NAME='Display_UI'(dev vdvDevice,
 			 integer nBtnMute,
 			 
 			 integer anBtnOthers[])
+
+/*
+    Example:
+    // Display
+    volatile integer anBtnPowerDisplay[] = {000}
+    volatile integer anBtnInputHDMIDisplay[] = {000}
+    volatile integer anBtnInputDVIDisplay[] = {000}
+    volatile integer anBtnInputUSBCDisplay[] = {000}
+    volatile integer anBtnInputHDBaseTDisplay[] = {000}
+    volatile integer anBtnInputDisplay[] = {000}
+    volatile integer nBtnMuteDisplay = 000
+
+    volatile integer anBtnOthersDisplay[] = {000}
+
+*/
 
 #include 'CUSTOMAPI'
 #include 'SNAPI'
@@ -91,7 +106,7 @@ DEFINE_EVENT
 	{
 	    stack_var integer nPush
 	    nPush = get_last(anBtnInputHDMI)
-	    send_command vdvDevice,"'INPUT-',asSources[_SOURCE_HDMI],',',itoa(nPush)"
+	    send_command vdvDevice,"'INPUT-HDMI,',itoa(nPush)"
 	}
     }
 
@@ -101,7 +116,7 @@ DEFINE_EVENT
 	{
 	    stack_var integer nPush
 	    nPush = get_last(anBtnInputDVI)
-	    send_command vdvDevice,"'INPUT-',asSources[_SOURCE_DVI],',',itoa(nPush)"
+	    send_command vdvDevice,"'INPUT-DVI,',itoa(nPush)"
 	}
     }
 
@@ -111,7 +126,7 @@ DEFINE_EVENT
 	{
 	    stack_var integer nPush
 	    nPush = get_last(anBtnInputUSBC)
-	    send_command vdvDevice,"'INPUT-',asSources[_SOURCE_USBC],',',itoa(nPush)"
+	    send_command vdvDevice,"'INPUT-USB-C,',itoa(nPush)"
 	}
     }
 
@@ -121,7 +136,7 @@ DEFINE_EVENT
 	{
 	    stack_var integer nPush
 	    nPush = get_last(anBtnInputHDBaseT)
-	    send_command vdvDevice,"'INPUT-',asSources[_SOURCE_HDBASET],',',itoa(nPush)"
+	    send_command vdvDevice,"'INPUT-HDBaseT,',itoa(nPush)"
 	}
     }
 
@@ -176,57 +191,64 @@ DEFINE_EVENT
     {
 	command:
 	{
-	    stack_var char sFeedback[256]
-	    sFeedback = data.text
-	    select
+	    stack_var char sCmd[DUET_MAX_CMD_LEN]
+	    stack_var char sHeader[DUET_MAX_HDR_LEN]
+	    stack_var char sParam[DUET_MAX_PARAM_LEN]
+	    sCmd = data.text
+	    sHeader = DuetParseCmdHeader(sCmd)
+	    sParam = DuetParseCmdParam(sCmd)
+
+	    switch(sHeader)
 	    {
-		active(find_string(sFeedback,'INPUTSELECTED-',1)):
+		case 'INPUTSELECTED':
 		{
-		    remove_string(sFeedback,'INPUTSELECTED-',1)
-		    nInputSelected = atoi("sFeedback")
+		    nInputSelected = atoi("sParam")
 		    nInputSelectedHDMI = 0
 		    nInputSelectedDVI = 0
 		    nInputSelectedHDBaseT = 0
 		    nInputSelectedUSBC = 0
-		    fnInputFeedback()
+		    fnInputFeedback()		
 		}
-		active(find_string(sFeedback,'INPUT-',1)):
+		case 'INPUT':
 		{
-		    remove_string(sFeedback,'INPUT-',1)
-		    select
+		    stack_var integer nNumber
+		    nNumber = atoi(DuetParseCmdParam(sCmd))
+		    fnDebug("'Input type: ',sParam,' number: ',itoa(nNumber)")
+		    switch(sParam)
 		    {
-			active(find_string(sFeedback,asSources[_SOURCE_HDMI],1)):
+			case 'HDMI':
 			{
-			    nInputSelectedHDMI = atoi("sFeedback")
+			    nInputSelectedHDMI = nNumber
 			    nInputSelectedDVI = 0
 			    nInputSelectedHDBaseT = 0
 			    nInputSelectedUSBC = 0
 			    nInputSelected = 0
 			}
-			active(find_string(sFeedback,asSources[_SOURCE_DVI],1)):
+			case 'DVI':
 			{
 			    nInputSelectedHDMI = 0
-			    nInputSelectedDVI = atoi("sFeedback")
+			    nInputSelectedDVI = nNumber
 			    nInputSelectedHDBaseT = 0
 			    nInputSelectedUSBC = 0
-			    nInputSelected = 0						
+			    nInputSelected = 0			
 			}
-			active(find_string(sFeedback,asSources[_SOURCE_HDBaseT],1)):
+			case 'HDBaseT':
 			{
 			    nInputSelectedHDMI = 0
 			    nInputSelectedDVI = 0
-			    nInputSelectedHDBaseT = atoi("sFeedback")
+			    nInputSelectedHDBaseT = nNumber
 			    nInputSelectedUSBC = 0
 			    nInputSelected = 0						
 			}
-			active(find_string(sFeedback,asSources[_SOURCE_USBC],1)):
+			case 'USB-C':
 			{
 			    nInputSelectedHDMI = 0
 			    nInputSelectedDVI = 0
 			    nInputSelectedHDBaseT = 0
-			    nInputSelectedUSBC = atoi("sFeedback")
+			    nInputSelectedUSBC = nNumber
 			    nInputSelected = 0						
-			}
+			}			
+			
 		    }
 		    fnInputFeedback()
 		}

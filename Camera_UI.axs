@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/11/2019  AT: 09:40:45        *)
+(*  FILE_LAST_MODIFIED_ON: 09/26/2019  AT: 09:04:14        *)
 (***********************************************************)
 
 MODULE_NAME='Camera_UI'(dev vdvDevice,
@@ -13,26 +13,44 @@ MODULE_NAME='Camera_UI'(dev vdvDevice,
 			integer anBtnFocus[], // Near, Far
 			integer nLevelFocus,
 			integer nBtnAutofocus,
-			integer anBtnPreset[])
+			integer anBtnPreset[],
+			integer bActive)
 
 #include 'CUSTOMAPI'
 #include 'SNAPI'
 
 DEFINE_CONSTANT
 
-    volatile integer _BTN_ON  = 1
-    volatile integer _BTN_OFF = 2
+    integer _BTN_ON  = 1
+    integer _BTN_OFF = 2
+    
+    integer _TLID = 1
+    long lTimes[] = {200} // Update feedback every .20 sec
 
 DEFINE_VARIABLE
 
     volatile integer bSaving = false
+    
+    volatile integer bActiveAux = false
 
 DEFINE_START
+    
+    timeline_create(_TLID,lTimes,1,TIMELINE_RELATIVE,TIMELINE_REPEAT)
     
     define_function fnPowerFeedback()
     {
 	[dvTp,anBtnPower[_BTN_ON]]  = [vdvDevice,POWER_FB]
 	[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
+    }
+    
+    define_function fnFeedback()
+    {
+	if(bActive)
+	{
+	    [dvTp,anBtnPower[_BTN_ON]] = [vdvDevice,POWER_FB]
+	    [dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
+	    [dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]
+	}
     }
 
 DEFINE_EVENT
@@ -42,14 +60,17 @@ DEFINE_EVENT
 	push:
 	{	    
 	    stack_var integer nPush
-	    nPush = get_last(anBtnPower)
-	    if(nPush == 1) // Power On
-	    {	
-		pulse[vdvDevice,PWR_ON]
-	    }
-	    else // Power Off
+	    if(bactive)
 	    {
-		pulse[vdvDevice,PWR_OFF]
+		nPush = get_last(anBtnPower)
+		if(nPush == 1) // Power On
+		{	
+		    pulse[vdvDevice,PWR_ON]
+		}
+		else // Power Off
+		{
+		    pulse[vdvDevice,PWR_OFF]
+		}
 	    }
 	}
     }
@@ -59,20 +80,26 @@ DEFINE_EVENT
 	push:
 	{
 	    stack_var integer nPush
-	    nPush = get_last(anBtnPanTilt)
-	    to[dvTp,anBtnPanTilt[nPush]]
-	    switch(nPush)
+	    if(bActive)
 	    {
-		case 1: {pulse[vdvDevice,TILT_UP]}
-		case 2: {pulse[vdvDevice,TILT_DN]}
-		case 3: {pulse[vdvDevice,PAN_LT]}
-		case 4: {pulse[vdvDevice,PAN_RT]}
-		case 5: {pulse[vdvDevice,_CAM_HOME]}
+		nPush = get_last(anBtnPanTilt)
+		to[dvTp,anBtnPanTilt[nPush]]
+		switch(nPush)
+		{
+		    case 1: {pulse[vdvDevice,TILT_UP]}
+		    case 2: {pulse[vdvDevice,TILT_DN]}
+		    case 3: {pulse[vdvDevice,PAN_LT]}
+		    case 4: {pulse[vdvDevice,PAN_RT]}
+		    case 5: {pulse[vdvDevice,_CAM_HOME]}
+		}
 	    }
 	}
 	release:
 	{
-	    pulse[vdvDevice,_PANTILT_STOP]
+	    if(bactive)
+	    {
+		pulse[vdvDevice,_PANTILT_STOP]
+	    }
 	}
     }
 
@@ -81,15 +108,18 @@ DEFINE_EVENT
 	push:
 	{
 	    stack_var integer nPush
-	    nPush = get_last(anBtnZoom)
-	    to[dvTp,anBtnZoom[nPush]]
-	    if(nPush == 1) // Zoom In
+	    if(bActive)
 	    {
-		to[vdvDevice,ZOOM_IN]
-	    }
-	    else if(nPush == 2) // Zoom Out
-	    {
-		to[vdvDevice,ZOOM_OUT]
+		nPush = get_last(anBtnZoom)
+		to[dvTp,anBtnZoom[nPush]]
+		if(nPush == 1) // Zoom In
+		{
+		    to[vdvDevice,ZOOM_IN]
+		}
+		else if(nPush == 2) // Zoom Out
+		{
+		    to[vdvDevice,ZOOM_OUT]
+		}
 	    }
 	}
     }
@@ -99,15 +129,18 @@ DEFINE_EVENT
 	push:
 	{
 	    stack_var integer nPush
-	    nPush = get_last(anBtnFocus)
-	    to[dvTp,anBtnFocus[nPush]]
-	    if(nPush == 1) // Focus Near
+	    if(bActive)
 	    {
-		to[vdvDevice,FOCUS_NEAR]
-	    }
-	    else if(nPush == 2) // Focus Far
-	    {
-		to[vdvDevice,FOCUS_FAR]
+		nPush = get_last(anBtnFocus)
+		to[dvTp,anBtnFocus[nPush]]
+		if(nPush == 1) // Focus Near
+		{
+		    to[vdvDevice,FOCUS_NEAR]
+		}
+		else if(nPush == 2) // Focus Far
+		{
+		    to[vdvDevice,FOCUS_FAR]
+		}
 	    }
 	}
     }
@@ -116,7 +149,10 @@ DEFINE_EVENT
     {
 	push:
 	{
-	    [vdvDevice,AUTO_FOCUS] = ![vdvDevice,AUTO_FOCUS]
+	    if(bactive)
+	    {
+		[vdvDevice,AUTO_FOCUS] = ![vdvDevice,AUTO_FOCUS]
+	    }
 	}
     }
     
@@ -125,18 +161,23 @@ DEFINE_EVENT
 	push:
 	{
 	    stack_var integer nPush
-	    bSaving = false
+	    if(bActive) {bSaving = false}
+	    nPush = get_last(anBtnPreset)
+	    to[dvTp,anBtnPreset[nPush]]
 	}
 	hold[20]:
 	{
-	    bSaving = true
+	    if(bactive) {bSaving = true}
 	}
 	release:
 	{
 	    stack_var integer nPush
-	    nPush = get_last(anBtnPreset)
-	    if(bSaving) {send_command vdvDevice,"'CAMERAPRESETSAVE-',itoa(nPush)"}
-	    else	{send_command vdvDevice,"'CAMERAPRESET-',itoa(nPush)"}
+	    if(bActive)
+	    {
+		nPush = get_last(anBtnPreset)
+		if(bSaving) {send_command vdvDevice,"'CAMERAPRESETSAVE-',itoa(nPush)"}
+		else	    {send_command vdvDevice,"'CAMERAPRESET-',itoa(nPush)"}
+	    }
 	}
     }
 
@@ -144,11 +185,11 @@ DEFINE_EVENT
     {
 	on:
 	{
-	    [dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]
+	    if(bActive) {[dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]}
 	}
 	off:
 	{
-	    [dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]
+	    if(bActive) {[dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]}
 	}
     }
 
@@ -156,13 +197,19 @@ DEFINE_EVENT
     {
 	on:
 	{
-	    on[dvTp,anBtnPower[_BTN_ON]]
-	    off[dvTp,anBtnPower[_BTN_OFF]]
+	    if(bActive)
+	    {
+		on[dvTp,anBtnPower[_BTN_ON]]
+		off[dvTp,anBtnPower[_BTN_OFF]]
+	    }
 	}
 	off:
 	{
-	    on[dvTp,anBtnPower[_BTN_OFF]]		
-	    off[dvTp,anBtnPower[_BTN_ON]]	
+	    if(bactive)
+	    {
+		on[dvTp,anBtnPower[_BTN_OFF]]		
+		off[dvTp,anBtnPower[_BTN_ON]]	
+	    }
 	}
     }
 
@@ -201,8 +248,16 @@ DEFINE_EVENT
     {
 	online:
 	{
-	    fnPowerFeedback()
+	    if(bactive)
+	    {
+		fnPowerFeedback()
+	    }
 	}
+    }
+    
+    timeline_event[_TLID]
+    {
+	fnFeedback()
     }
 
 (***********************************************************)
