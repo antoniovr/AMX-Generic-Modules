@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/28/2019  AT: 21:06:31        *)
+(*  FILE_LAST_MODIFIED_ON: 10/24/2019  AT: 09:19:59        *)
 (***********************************************************)
 
 MODULE_NAME='Display_UI'(dev vdvDevice,
@@ -15,9 +15,10 @@ MODULE_NAME='Display_UI'(dev vdvDevice,
 			 
 			 integer anBtnOthers[])
 
-/*
-    Example:
-    // Display
+/* DEFINITION:
+
+DEFINE_VARIABLE
+
     volatile integer anBtnPowerDisplay[] = {000}
     volatile integer anBtnInputHDMIDisplay[] = {000}
     volatile integer anBtnInputDVIDisplay[] = {000}
@@ -27,6 +28,20 @@ MODULE_NAME='Display_UI'(dev vdvDevice,
     volatile integer nBtnMuteDisplay = 000
 
     volatile integer anBtnOthersDisplay[] = {000}
+
+DEFINE_MODULE
+
+    'Display_UI' display_UI(vdvDisplay,
+			    dvTp,
+			    anBtnPowerDisplay,
+			    anBtnInputHDMIVW_Juntas,
+			    
+			    anBtnInputDVIDisplay,
+			    anBtnInputUSBCDisplay,
+			    anBtnInputHDBaseTDisplay,
+			    anBtnInputDisplay,
+			    nBtnMuteDisplay,
+			    anBtnOthersDisplay)
 
 */
 

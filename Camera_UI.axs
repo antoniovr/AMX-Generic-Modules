@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/26/2019  AT: 09:04:14        *)
+(*  FILE_LAST_MODIFIED_ON: 10/24/2019  AT: 09:16:58        *)
 (***********************************************************)
 
 MODULE_NAME='Camera_UI'(dev vdvDevice,
@@ -15,6 +15,36 @@ MODULE_NAME='Camera_UI'(dev vdvDevice,
 			integer nBtnAutofocus,
 			integer anBtnPreset[],
 			integer bActive)
+
+(* DEFINITION:
+DEFINE_VARIABLE
+
+    volatile integer anBtnCamPower[] = {101,102} // On, Off
+    volatile integer anBtnCamPantilt[] = {103,104,105,106,107} // Up, Down, Left, Right, Home
+    volatile integer nLevelCamPantilt = 101 
+    volatile integer anBtnCamZoom[] = {108,109} // In, Out
+    volatile integer nLevelCamZoom = 102
+    volatile integer anBtnCamFocus[] = {110,111} // Near, Far
+    volatile integer nLevelCamFocus = 103
+    volatile integer nBtnCamAutoFocus = 112
+    volatile integer anBtnCamPreset[] = {113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130}
+
+DEFINE_MODULE
+
+    'Camera_UI' cam1(avdvCams[_CAM_1],
+		     dvTp,
+		     anBtnCamPower, // On, Off
+		     anBtnCamPantilt, // Up, Down, Left, Right, Home
+		     nLevelCamPantilt, 
+		     anBtnCamZoom, // In, Out
+		     nLevelCamZoom,
+		     anBtnCamFocus, // Near, Far
+		     nLevelCamFocus,
+		     nBtnCamAutofocus,
+		     anBtnCamPreset,
+		     abCamActivates[_CAM_1])
+
+*)
 
 #include 'CUSTOMAPI'
 #include 'SNAPI'
@@ -161,13 +191,18 @@ DEFINE_EVENT
 	push:
 	{
 	    stack_var integer nPush
-	    if(bActive) {bSaving = false}
-	    nPush = get_last(anBtnPreset)
-	    to[dvTp,anBtnPreset[nPush]]
-	}
-	hold[20]:
-	{
-	    if(bactive) {bSaving = true}
+	    if(bActive) 
+	    {
+		bSaving = false
+		nPush = get_last(anBtnPreset)
+		to[dvTp,anBtnPreset[nPush]]
+		wait 20 'saving_preset'
+		{
+		    fnBeep(dvTp)
+		    bSaving = true
+		}
+	    }
+	    
 	}
 	release:
 	{
@@ -175,8 +210,10 @@ DEFINE_EVENT
 	    if(bActive)
 	    {
 		nPush = get_last(anBtnPreset)
+		cancel_wait 'saving_preset'
 		if(bSaving) {send_command vdvDevice,"'CAMERAPRESETSAVE-',itoa(nPush)"}
 		else	    {send_command vdvDevice,"'CAMERAPRESET-',itoa(nPush)"}
+		bSaving = false
 	    }
 	}
     }
@@ -216,6 +253,7 @@ DEFINE_EVENT
     level_event[dvTp,nLevelPanTilt]
     {
 	send_level vdvDevice,PAN_SPEED_LVL,level.value
+	send_level vdvDevice,TILT_SPEED_LVL,level.value
     }
 
     level_event[dvTp,nLevelZoom]

@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/11/2019  AT: 09:39:55        *)
+(*  FILE_LAST_MODIFIED_ON: 10/24/2019  AT: 09:15:43        *)
 (***********************************************************)
 
 MODULE_NAME='Activation_Channel_UI'(dev dvDev,
@@ -11,6 +11,31 @@ MODULE_NAME='Activation_Channel_UI'(dev dvDev,
 				    
 				    integer anBtnTo[],
 				    integer anIrTo[])
+
+(* DEFINITION:
+
+DEFINE_VARIABLE
+
+    volatile integer anBtnPulseArec[]   = {331,332,333,334,335,336,337,338,339,340,341,342,343}
+    volatile integer anIrPulseArec[]    = {  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13}
+    volatile integer anPulseTimesArec[] = {  3,  3,  3,  3,  3,  3,  1,  3,  3,  3,  3,  3,  3}
+
+    integer anBtnToArec[] = {9999}
+    integer anIrToArec[] = {9999}
+
+DEFINE_MODULE
+
+    'Activation_Channel_UI' recorder_UI(dvArec,
+					dvTp,
+					
+					anBtnPulseArec,
+					anIrPulseArec,
+					anPulseTimesArec,
+					
+					anBtnToArec,
+					anIrToArec)
+
+*)
 
 DEFINE_VARIABLE
 
