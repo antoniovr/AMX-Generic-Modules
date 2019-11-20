@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/25/2019  AT: 10:04:19        *)
+(*  FILE_LAST_MODIFIED_ON: 11/18/2019  AT: 09:02:19        *)
 (***********************************************************)
 
 MODULE_NAME='Videoconference_UI'(dev vdvDevice,
@@ -10,7 +10,8 @@ MODULE_NAME='Videoconference_UI'(dev vdvDevice,
 				 integer anBtnCall[], // Accept, Reject
 				 integer anBtnKeypad[], // 0,1,2,3,4,5,6,7,8,9,*,.,#
 				 integer anBtnVol[], // Up, Down, Mute
-				 integer anBtnSend[] // Input, Graphics
+				 integer anBtnSend[], // Input, Graphics
+				 integer nBtnPip
 				 )
 
 #include 'CUSTOMAPI'
@@ -207,6 +208,15 @@ DEFINE_EVENT
 	off:
 	{
 	    off[dvTp,anBtnVol[_BTN_MUTE]]
+	}
+    }
+    
+    button_event[dvTp,nBtnPip]
+    {
+	push:
+	{
+	    pulse[dvTp,nBtnPip]
+	    pulse[vdvDevice,PIP_POS]
 	}
     }
 

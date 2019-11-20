@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 10/24/2019  AT: 09:19:59        *)
+(*  FILE_LAST_MODIFIED_ON: 11/18/2019  AT: 08:45:05        *)
 (***********************************************************)
 
 MODULE_NAME='Display_UI'(dev vdvDevice,
@@ -12,6 +12,8 @@ MODULE_NAME='Display_UI'(dev vdvDevice,
 			 integer anBtnInputHDBaseT[],
 			 integer anBtnInput[],
 			 integer nBtnMute,
+			 
+			 integer anBtnVol[], // Up, Down, Mute
 			 
 			 integer anBtnOthers[])
 
@@ -27,6 +29,8 @@ DEFINE_VARIABLE
     volatile integer anBtnInputDisplay[] = {000}
     volatile integer nBtnMuteDisplay = 000
 
+    volatile integer anBtnVolDisplay[] = {000,000,000}
+
     volatile integer anBtnOthersDisplay[] = {000}
 
 DEFINE_MODULE
@@ -34,13 +38,16 @@ DEFINE_MODULE
     'Display_UI' display_UI(vdvDisplay,
 			    dvTp,
 			    anBtnPowerDisplay,
-			    anBtnInputHDMIVW_Juntas,
+			    anBtnInputHDMIDisplay,
 			    
 			    anBtnInputDVIDisplay,
 			    anBtnInputUSBCDisplay,
 			    anBtnInputHDBaseTDisplay,
 			    anBtnInputDisplay,
 			    nBtnMuteDisplay,
+			    
+			    anBtnVolDisplay,
+			    
 			    anBtnOthersDisplay)
 
 */
@@ -50,8 +57,12 @@ DEFINE_MODULE
 
 DEFINE_CONSTANT
 
+    // Power
     volatile integer _BTN_ON  = 1
     volatile integer _BTN_OFF = 2
+    
+    // Vol
+    volatile integer _BTN_MUTE = 3
 
 DEFINE_VARIABLE
 
@@ -86,6 +97,11 @@ DEFINE_START
     {
 	[dvTp,anBtnPower[_BTN_ON]]  = [vdvDevice,POWER_FB]
 	[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
+    }
+    
+    define_function fnVolFeedback()
+    {
+	[dvTp,anBtnVol[_BTN_MUTE]] = [vdvDevice,VOL_MUTE_FB]
     }
 
 DEFINE_EVENT
@@ -162,6 +178,33 @@ DEFINE_EVENT
 	    stack_var integer nPush
 	    nPush = get_last(anBtnInput)
 	    send_command vdvDevice,"'INPUTSELECT-',itoa(nPush)"
+	}
+    }
+
+    button_event[dvTp,anBtnVol]
+    {
+	push:
+	{
+	    stack_var integer nPush
+	    nPush = get_last(anBtnVol)
+	    switch(nPush)
+	    {
+		case 1: // Vol +
+		{
+		    to[dvTp,anBtnVol[nPush]]
+		    to[vdvDevice,VOL_UP]
+		}
+		case 2: // Vol -
+		{
+		    to[dvTp,anBtnVol[nPush]]
+		    to[vdvDevice,VOL_DN]
+		}
+		case 3: // Vol Mute
+		{
+		    pulse[vdvDevice,VOL_MUTE]
+		}
+	    }
+	    fnVolFeedback()
 	}
     }
 
@@ -278,6 +321,7 @@ DEFINE_EVENT
 	    fnInputFeedback()
 	    fnMuteFeedback()
 	    fnPowerFeedback()
+	    fnVolFeedback()
 	}
     }
 
