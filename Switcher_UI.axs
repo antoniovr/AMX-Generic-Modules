@@ -2,13 +2,14 @@
 (*  FILE CREATED ON: 09/10/2019  AT: 11:29:06              *)
 (***********************************************************)
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/28/2019  AT: 20:27:15        *)
+(*  FILE_LAST_MODIFIED_ON: 02/25/2020  AT: 16:06:30        *)
 (***********************************************************)
 
 MODULE_NAME='Switcher_UI' (dev dvTp,
 			   dev vdvDevice,
 			   integer anBtnInputs[],
-			   integer anBtnOutputs[])
+			   integer anBtnOutputs[],
+			   integer anBtnLevels[])
 
 /*
     Example:
@@ -31,13 +32,18 @@ DEFINE_CONSTANT
 
     long _TLID = 1
     long lTimes[] = {200}
+    integer _LEVEL_ALL   = 1
+    integer _LEVEL_VIDEO = 2
+    integer _LEVEL_AUDIO = 3
     
 DEFINE_VARIABLE
 
     volatile integer nInputSelected = 0
     
-    volatile integer anOutputStatus[40]
-    volatile integer anOutputStatusAux[40]
+    volatile integer anOutputStatus[2][40]
+    //volatile integer anOutputStatusAux[2][40]
+    
+    volatile integer nLevel = _LEVEL_ALL
 
 DEFINE_START
 
@@ -53,14 +59,48 @@ DEFINE_START
 	
 	if(nInputSelected)
 	{
-	    for(i=1;i<=max_length_array(anBtnOutputs);i++)
+	    select
 	    {
-		[dvTp,anBtnOutputs[i]] = (anOutputStatus[i] == nInputSelected)
+		active(nLevel == _LEVEL_ALL):
+		{
+		    for(i=1;i<=max_length_array(anBtnOutputs);i++)
+		    {
+			[dvTp,anBtnOutputs[i]] = (anOutputStatus[1][i] == nInputSelected && anOutputStatus[2][i] == nInputSelected)
+		    }		
+		}
+		active(nLevel == _LEVEL_VIDEO):
+		{
+		    for(i=1;i<=max_length_array(anBtnOutputs);i++)
+		    {
+			[dvTp,anBtnOutputs[i]] = (anOutputStatus[1][i] == nInputSelected)
+		    }
+		}
+		active(nLevel == _LEVEL_AUDIO):
+		{
+		    for(i=1;i<=max_length_array(anBtnOutputs);i++)
+		    {
+			[dvTp,anBtnOutputs[i]] = (anOutputStatus[2][i] == nInputSelected)
+		    }
+		}
 	    }
+
 	}
+	
+	[dvTp,anBtnLevels[_LEVEL_ALL]] = (nLevel == _LEVEL_ALL)
+	[dvTp,anBtnLevels[_LEVEL_VIDEO]] = (nLevel == _LEVEL_VIDEO)
+	[dvTp,anBtnLevels[_LEVEL_AUDIO]] = (nLevel == _LEVEL_AUDIO)
     }
 
 DEFINE_EVENT
+
+    button_event[dvTp,anBtnLevels]
+    {
+	push:
+	{
+	    stack_var integer nPush
+	    nLevel = get_last(anBtnLevels)
+	}
+    }
 
     button_event[dvTp,anBtnInputs]
     {
@@ -76,13 +116,42 @@ DEFINE_EVENT
 	{
 	    stack_var integer nPush
 	    nPush = get_last(anBtnOutputs)
-	    if(anOutputStatus[nPush] != nInputSelected)
+	    
+	    select
 	    {
-		send_command vdvDevice,"'CI',itoa(nInputSelected),'O',itoa(nPush)"
-	    }
-	    else
-	    {
-		//send_command vdvDevice,"'CI0O',itoa(nPush)"
+		active(nLevel == _LEVEL_ALL):
+		{
+		    if(anOutputStatus[1][nPush] != nInputSelected && anOutputStatus[2][nPush] != nInputSelected)
+		    {
+			send_command vdvDevice,"'CI',itoa(nInputSelected),'O',itoa(nPush)"
+		    }
+		    else
+		    {
+			send_command vdvDevice,"'CI0O',itoa(nPush)"	
+		    }
+		}
+		active(nLevel == _LEVEL_VIDEO):
+		{
+		    if(anOutputStatus[1][nPush] != nInputSelected)
+		    {
+			send_command vdvDevice,"'VI',itoa(nInputSelected),'O',itoa(nPush)"
+		    }
+		    else
+		    {
+			send_command vdvDevice,"'VI0O',itoa(nPush)"	
+		    }
+		}
+		active(nLevel == _LEVEL_AUDIO):
+		{
+		    if(anOutputStatus[2][nPush] != nInputSelected)
+		    {
+			send_command vdvDevice,"'AI',itoa(nInputSelected),'O',itoa(nPush)"
+		    }
+		    else
+		    {
+			send_command vdvDevice,"'AI0O',itoa(nPush)"
+		    }
+		}
 	    }
 	}
     }
@@ -102,18 +171,46 @@ DEFINE_EVENT
 	    {
 		default:
 		{
-		    if(find_string(sHeader,'CI',1))
+		    select
 		    {
-			stack_var char sInput[4]
-			stack_var char sOutput[4]
-			stack_var integer nInput
-			stack_var integer nOutput
-			sInput = remove_string(sHeader,'O',1)
-			nInput = atoi(sInput)
-			sOutput = sHeader
-			nOutput = atoi(sOutput)
-			anOutputStatus[nOutput] = nInput
-		    }	  
+			active(find_string(sHeader,'CI',1)):
+			{
+			    stack_var char sInput[4]
+			    stack_var char sOutput[4]
+			    stack_var integer nInput
+			    stack_var integer nOutput
+			    sInput = remove_string(sHeader,'O',1)
+			    nInput = atoi(sInput)
+			    sOutput = sHeader
+			    nOutput = atoi(sOutput)
+			    anOutputStatus[1][nOutput] = nInput
+			    anOutputStatus[2][nOutput] = nInput
+			}
+			active(find_string(sHeader,'VI',1)):
+			{
+			    stack_var char sInput[4]
+			    stack_var char sOutput[4]
+			    stack_var integer nInput
+			    stack_var integer nOutput
+			    sInput = remove_string(sHeader,'O',1)
+			    nInput = atoi(sInput)
+			    sOutput = sHeader
+			    nOutput = atoi(sOutput)
+			    anOutputStatus[1][nOutput] = nInput
+			}
+			active(find_string(sHeader,'AI',1)):
+			{
+			    stack_var char sInput[4]
+			    stack_var char sOutput[4]
+			    stack_var integer nInput
+			    stack_var integer nOutput
+			    sInput = remove_string(sHeader,'O',1)
+			    nInput = atoi(sInput)
+			    sOutput = sHeader
+			    nOutput = atoi(sOutput)
+			    anOutputStatus[2][nOutput] = nInput
+			}			
+		    }
 		}
 	    }
 	}

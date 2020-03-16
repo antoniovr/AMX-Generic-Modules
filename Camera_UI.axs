@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 10/24/2019  AT: 09:16:58        *)
+(*  FILE_LAST_MODIFIED_ON: 02/03/2020  AT: 16:39:37        *)
 (***********************************************************)
 
 MODULE_NAME='Camera_UI'(dev vdvDevice,
@@ -7,9 +7,11 @@ MODULE_NAME='Camera_UI'(dev vdvDevice,
 			 
 			integer anBtnPower[], // On, Off
 			integer anBtnPantilt[], // Up, Down, Left, Right, Home
-			integer nLevelPantilt, 
+			integer nLevelPantilt,
+			integer anBtnPantiltSpeed[],
 			integer anBtnZoom[], // In, Out
 			integer nLevelZoom,
+			integer anBtnZoomSpeed[],
 			integer anBtnFocus[], // Near, Far
 			integer nLevelFocus,
 			integer nBtnAutofocus,
@@ -62,6 +64,9 @@ DEFINE_VARIABLE
     volatile integer bSaving = false
     
     volatile integer bActiveAux = false
+    
+    volatile integer nPantiltSpeed = 25
+    volatile integer nZoomSpeed = 25
 
 DEFINE_START
     
@@ -69,27 +74,74 @@ DEFINE_START
     
     define_function fnPowerFeedback()
     {
-	[dvTp,anBtnPower[_BTN_ON]]  = [vdvDevice,POWER_FB]
-	[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
+	//[dvTp,anBtnPower[_BTN_ON]]  = [vdvDevice,POWER_FB]
+	//[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
     }
     
     define_function fnFeedback()
     {
 	if(bActive)
 	{
-	    [dvTp,anBtnPower[_BTN_ON]] = [vdvDevice,POWER_FB]
-	    [dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
+	    //[dvTp,anBtnPower[_BTN_ON]] = [vdvDevice,POWER_FB]
+	    //[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
 	    [dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]
+	    
+	    [dvTp,anBtnPantiltSpeed[1]] = (nPantiltSpeed == 15)
+	    [dvTp,anBtnPantiltSpeed[2]] = (nPantiltSpeed == 25)
+	    [dvTp,anBtnPantiltSpeed[3]] = (nPantiltSpeed == 35)
+	    
+	    [dvTp,anBtnZoomSpeed[1]] = (nZoomSpeed == 15)
+	    [dvTp,anBtnZoomSpeed[2]] = (nZoomSpeed == 25)
+	    [dvTp,anBtnZoomSpeed[3]] = (nZoomSpeed == 35)
 	}
     }
 
 DEFINE_EVENT
+
+    button_event[dvTp,anBtnPantiltSpeed]
+    {
+	push:
+	{
+	    stack_var integer nPush
+	    if(bActive)
+	    {
+		nPush = get_last(anBtnPantiltSpeed)
+		switch(nPush)
+		{
+		    case 1: {nPantiltSpeed = 15}
+		    case 2: {nPantiltSpeed = 25}
+		    case 3: {nPantiltSpeed = 35}
+		}
+		send_command vdvDevice,"'PANTILTSPEED-',itoa(nPantiltSpeed)"
+	    }
+	}
+    }
+    
+    button_event[dvTp,anBtnZoomSpeed]
+    {
+	push:
+	{
+	    stack_var integer nPush
+	    if(bActive)
+	    {
+		nPush = get_last(anBtnZoomSpeed)
+		switch(nPush)
+		{
+		    case 1: {nZoomSpeed = 15}
+		    case 2: {nZoomSpeed = 25}
+		    case 3: {nZoomSpeed = 35}
+		}
+		send_command vdvDevice,"'ZOOMSPEED-',itoa(nZoomSpeed)"
+	    }
+	}
+    }
 
     button_event[dvTp,anBtnPower]
     {
 	push:
 	{	    
 	    stack_var integer nPush
+	    pulse[dvTp,anBtnPower[nPush]]
 	    if(bactive)
 	    {
 		nPush = get_last(anBtnPower)
@@ -116,20 +168,32 @@ DEFINE_EVENT
 		to[dvTp,anBtnPanTilt[nPush]]
 		switch(nPush)
 		{
-		    case 1: {pulse[vdvDevice,TILT_UP]}
-		    case 2: {pulse[vdvDevice,TILT_DN]}
-		    case 3: {pulse[vdvDevice,PAN_LT]}
-		    case 4: {pulse[vdvDevice,PAN_RT]}
-		    case 5: {pulse[vdvDevice,_CAM_HOME]}
+		    case 1: {to[vdvDevice,TILT_UP]}
+		    case 2: {to[vdvDevice,TILT_DN]}
+		    case 3: {to[vdvDevice,PAN_LT]}
+		    case 4: {to[vdvDevice,PAN_RT]}
+		    case 5: {to[vdvDevice,_CAM_HOME]}
 		}
 	    }
 	}
 	release:
 	{
-	    if(bactive)
+	    /*
+	    stack_var integer nPush
+	    if(bActive)
 	    {
-		pulse[vdvDevice,_PANTILT_STOP]
+		nPush = get_last(anBtnPanTilt)
+		to[dvTp,anBtnPanTilt[nPush]]
+		switch(nPush)
+		{
+		    case 1: {off[vdvDevice,TILT_UP]}
+		    case 2: {off[vdvDevice,TILT_DN]}
+		    case 3: {off[vdvDevice,PAN_LT]}
+		    case 4: {off[vdvDevice,PAN_RT]}
+		    case 5: {off[vdvDevice,_CAM_HOME]}
+		}
 	    }
+	    */
 	}
     }
 
@@ -236,16 +300,16 @@ DEFINE_EVENT
 	{
 	    if(bActive)
 	    {
-		on[dvTp,anBtnPower[_BTN_ON]]
-		off[dvTp,anBtnPower[_BTN_OFF]]
+		//on[dvTp,anBtnPower[_BTN_ON]]
+		//off[dvTp,anBtnPower[_BTN_OFF]]
 	    }
 	}
 	off:
 	{
 	    if(bactive)
 	    {
-		on[dvTp,anBtnPower[_BTN_OFF]]		
-		off[dvTp,anBtnPower[_BTN_ON]]	
+		//on[dvTp,anBtnPower[_BTN_OFF]]		
+		//off[dvTp,anBtnPower[_BTN_ON]]	
 	    }
 	}
     }
