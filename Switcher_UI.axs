@@ -2,7 +2,7 @@
 (*  FILE CREATED ON: 09/10/2019  AT: 11:29:06              *)
 (***********************************************************)
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 02/25/2020  AT: 16:06:30        *)
+(*  FILE_LAST_MODIFIED_ON: 03/17/2020  AT: 12:57:13        *)
 (***********************************************************)
 
 MODULE_NAME='Switcher_UI' (dev dvTp,
@@ -16,11 +16,13 @@ MODULE_NAME='Switcher_UI' (dev dvTp,
     // Switcher
     volatile integer anBtnInputs[]  = {000,000,000,000}
     volatile integer anBtnOutputs[] = {000,000,000,000}   
+    volatile integer anBtnLevels[]  = {000,000,000} 
     
     'Switcher_UI' switcher_UI(dvTp,
 			  vdvSwitcher,
 			  anBtnInputs,
-			  anBtnOutputs)
+			  anBtnOutputs,
+			  anBtnLevels)
 */
 
 
@@ -32,9 +34,6 @@ DEFINE_CONSTANT
 
     long _TLID = 1
     long lTimes[] = {200}
-    integer _LEVEL_ALL   = 1
-    integer _LEVEL_VIDEO = 2
-    integer _LEVEL_AUDIO = 3
     
 DEFINE_VARIABLE
 
