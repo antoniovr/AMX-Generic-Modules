@@ -1,5 +1,5 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 02/03/2020  AT: 16:39:37        *)
+(*  FILE_LAST_MODIFIED_ON: 09/30/2020  AT: 08:46:21        *)
 (***********************************************************)
 
 MODULE_NAME='Camera_UI'(dev vdvDevice,
@@ -21,6 +21,8 @@ MODULE_NAME='Camera_UI'(dev vdvDevice,
 (* DEFINITION:
 DEFINE_VARIABLE
 
+    volatile integer nIDCam = 1
+
     volatile integer anBtnCamPower[] = {101,102} // On, Off
     volatile integer anBtnCamPantilt[] = {103,104,105,106,107} // Up, Down, Left, Right, Home
     volatile integer nLevelCamPantilt = 101 
@@ -30,21 +32,28 @@ DEFINE_VARIABLE
     volatile integer nLevelCamFocus = 103
     volatile integer nBtnCamAutoFocus = 112
     volatile integer anBtnCamPreset[] = {113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130}
+    volatile integer bActiveOn = 1
 
+    volatile integer anBtnPantiltSpeed[] = {5001,5002,5003}
+    volatile integer anBtnZoomSpeed[] = {5004,5005,5006}
+    
+    
 DEFINE_MODULE
 
-    'Camera_UI' cam1(avdvCams[_CAM_1],
+    'Camera_UI' cam1(vdvCam,
 		     dvTp,
 		     anBtnCamPower, // On, Off
 		     anBtnCamPantilt, // Up, Down, Left, Right, Home
 		     nLevelCamPantilt, 
+		     anBtnPantiltSpeed,
 		     anBtnCamZoom, // In, Out
 		     nLevelCamZoom,
+		     anBtnZoomSpeed,
 		     anBtnCamFocus, // Near, Far
 		     nLevelCamFocus,
 		     nBtnCamAutofocus,
 		     anBtnCamPreset,
-		     abCamActivates[_CAM_1])
+		     bActiveOn)
 
 *)
 
