@@ -1,28 +1,28 @@
 (***********************************************************)
-(*  FILE_LAST_MODIFIED_ON: 09/30/2020  AT: 08:46:21        *)
+(*  FILE_LAST_MODIFIED_ON: 08/15/2020  AT: 00:01:27        *)
 (***********************************************************)
 
 MODULE_NAME='Camera_UI'(dev vdvDevice,
-			dev dvTp,
-			 
-			integer anBtnPower[], // On, Off
-			integer anBtnPantilt[], // Up, Down, Left, Right, Home
-			integer nLevelPantilt,
-			integer anBtnPantiltSpeed[],
-			integer anBtnZoom[], // In, Out
-			integer nLevelZoom,
-			integer anBtnZoomSpeed[],
-			integer anBtnFocus[], // Near, Far
-			integer nLevelFocus,
-			integer nBtnAutofocus,
-			integer anBtnPreset[],
-			integer bActive)
+                        dev dvTp,
+                        
+                        integer anBtnPower[], // On, Off
+                        integer anBtnPantilt[], // Up, Down, Left, Right, Home
+                        integer nLevelPantilt,
+                        integer anBtnPantiltSpeed[],
+                        integer anBtnZoom[], // In, Out
+                        integer nLevelZoom,
+                        integer anBtnZoomSpeed[],
+                        integer anBtnFocus[], // Near, Far
+                        integer nLevelFocus,
+                        integer nBtnAutofocus,
+                        integer anBtnPreset[],
+                        integer bActive)
 
-(* DEFINITION:
+/* DEFINITION:
+
 DEFINE_VARIABLE
 
-    volatile integer nIDCam = 1
-
+    // Cameras
     volatile integer anBtnCamPower[] = {101,102} // On, Off
     volatile integer anBtnCamPantilt[] = {103,104,105,106,107} // Up, Down, Left, Right, Home
     volatile integer nLevelCamPantilt = 101 
@@ -32,30 +32,29 @@ DEFINE_VARIABLE
     volatile integer nLevelCamFocus = 103
     volatile integer nBtnCamAutoFocus = 112
     volatile integer anBtnCamPreset[] = {113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130}
-    volatile integer bActiveOn = 1
 
-    volatile integer anBtnPantiltSpeed[] = {5001,5002,5003}
-    volatile integer anBtnZoomSpeed[] = {5004,5005,5006}
+    volatile integer anBtnCamPantiltSpeed[] = {131,132,133}
+    volatile integer anBtnCamZoomSpeed[]    = {134,135,136}
+    volatile integer nIDCam1 = 1
     
-    
-DEFINE_MODULE
+    volatile integer abCamActivates[1]    
 
-    'Camera_UI' cam1(vdvCam,
-		     dvTp,
-		     anBtnCamPower, // On, Off
-		     anBtnCamPantilt, // Up, Down, Left, Right, Home
-		     nLevelCamPantilt, 
-		     anBtnPantiltSpeed,
-		     anBtnCamZoom, // In, Out
-		     nLevelCamZoom,
-		     anBtnZoomSpeed,
-		     anBtnCamFocus, // Near, Far
-		     nLevelCamFocus,
-		     nBtnCamAutofocus,
-		     anBtnCamPreset,
-		     bActiveOn)
+    'Camera_UI' cam1_ui(avdvCams[_CAM_1],
+                        dvTp,                              
+                        anBtnCamPower, // On, Off           
+                        anBtnCamPantilt, // Up, Down, Left, Right, Home
+                        nLevelCamPantilt,                  
+                        anBtnCamPantiltSpeed,
+                        anBtnCamZoom, // In, Out           
+                        nLevelCamZoom,                     
+                        anBtnCamZoomSpeed,
+                        anBtnCamFocus, // Near, Far        
+                        nLevelCamFocus,                    
+                        nBtnCamAutofocus,                  
+                        anBtnCamPreset, 
+                        abCamActivates[_CAM_1])
 
-*)
+*/
 
 #include 'CUSTOMAPI'
 #include 'SNAPI'
@@ -83,47 +82,47 @@ DEFINE_START
     
     define_function fnPowerFeedback()
     {
-	//[dvTp,anBtnPower[_BTN_ON]]  = [vdvDevice,POWER_FB]
-	//[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
+        //[dvTp,anBtnPower[_BTN_ON]]  = [vdvDevice,POWER_FB]
+        //[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
     }
     
     define_function fnFeedback()
     {
-	if(bActive)
-	{
-	    //[dvTp,anBtnPower[_BTN_ON]] = [vdvDevice,POWER_FB]
-	    //[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
-	    [dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]
-	    
-	    [dvTp,anBtnPantiltSpeed[1]] = (nPantiltSpeed == 15)
-	    [dvTp,anBtnPantiltSpeed[2]] = (nPantiltSpeed == 25)
-	    [dvTp,anBtnPantiltSpeed[3]] = (nPantiltSpeed == 35)
-	    
-	    [dvTp,anBtnZoomSpeed[1]] = (nZoomSpeed == 15)
-	    [dvTp,anBtnZoomSpeed[2]] = (nZoomSpeed == 25)
-	    [dvTp,anBtnZoomSpeed[3]] = (nZoomSpeed == 35)
-	}
+        if(bActive)
+        {
+            //[dvTp,anBtnPower[_BTN_ON]] = [vdvDevice,POWER_FB]
+            //[dvTp,anBtnPower[_BTN_OFF]] = ![vdvDevice,POWER_FB]
+            [dvTp,nBtnAutofocus] = [vdvDevice,AUTO_FOCUS_FB]
+            
+            [dvTp,anBtnPantiltSpeed[1]] = (nPantiltSpeed == 15)
+            [dvTp,anBtnPantiltSpeed[2]] = (nPantiltSpeed == 25)
+            [dvTp,anBtnPantiltSpeed[3]] = (nPantiltSpeed == 35)
+            
+            [dvTp,anBtnZoomSpeed[1]] = (nZoomSpeed == 15)
+            [dvTp,anBtnZoomSpeed[2]] = (nZoomSpeed == 25)
+            [dvTp,anBtnZoomSpeed[3]] = (nZoomSpeed == 35)
+        }
     }
 
 DEFINE_EVENT
 
     button_event[dvTp,anBtnPantiltSpeed]
     {
-	push:
-	{
-	    stack_var integer nPush
-	    if(bActive)
-	    {
-		nPush = get_last(anBtnPantiltSpeed)
-		switch(nPush)
-		{
-		    case 1: {nPantiltSpeed = 15}
-		    case 2: {nPantiltSpeed = 25}
-		    case 3: {nPantiltSpeed = 35}
-		}
-		send_command vdvDevice,"'PANTILTSPEED-',itoa(nPantiltSpeed)"
-	    }
-	}
+        push:
+        {
+            stack_var integer nPush
+            if(bActive)
+            {
+                nPush = get_last(anBtnPantiltSpeed)
+                switch(nPush)
+                {
+                    case 1: {nPantiltSpeed = 15}
+                    case 2: {nPantiltSpeed = 25}
+                    case 3: {nPantiltSpeed = 35}
+                }
+                send_command vdvDevice,"'PANTILTSPEED-',itoa(nPantiltSpeed)"
+            }
+        }
     }
     
     button_event[dvTp,anBtnZoomSpeed]
@@ -150,6 +149,7 @@ DEFINE_EVENT
 	push:
 	{	    
 	    stack_var integer nPush
+	    nPush = get_last(anBtnPower)
 	    pulse[dvTp,anBtnPower[nPush]]
 	    if(bactive)
 	    {
@@ -250,13 +250,13 @@ DEFINE_EVENT
     
     button_event[dvTp,nBtnAutofocus]
     {
-	push:
-	{
-	    if(bactive)
-	    {
-		[vdvDevice,AUTO_FOCUS] = ![vdvDevice,AUTO_FOCUS]
-	    }
-	}
+        push:
+        {
+            if(bactive)
+            {
+                [vdvDevice,AUTO_FOCUS] = ![vdvDevice,AUTO_FOCUS]
+            }
+        }
     }
     
     button_event[dvTp,anBtnPreset]    
@@ -305,72 +305,72 @@ DEFINE_EVENT
 
     channel_event[vdvDevice,POWER_FB]
     {
-	on:
-	{
-	    if(bActive)
-	    {
-		//on[dvTp,anBtnPower[_BTN_ON]]
-		//off[dvTp,anBtnPower[_BTN_OFF]]
-	    }
-	}
-	off:
-	{
-	    if(bactive)
-	    {
-		//on[dvTp,anBtnPower[_BTN_OFF]]		
-		//off[dvTp,anBtnPower[_BTN_ON]]	
-	    }
-	}
+        on:
+        {
+            if(bActive)
+            {
+                //on[dvTp,anBtnPower[_BTN_ON]]
+                //off[dvTp,anBtnPower[_BTN_OFF]]
+            }
+        }
+        off:
+        {
+            if(bactive)
+            {
+                //on[dvTp,anBtnPower[_BTN_OFF]]		
+                //off[dvTp,anBtnPower[_BTN_ON]]	
+            }
+        }
     }
 
     level_event[dvTp,nLevelPanTilt]
     {
-	send_level vdvDevice,PAN_SPEED_LVL,level.value
-	send_level vdvDevice,TILT_SPEED_LVL,level.value
+        send_level vdvDevice,PAN_SPEED_LVL,level.value
+        send_level vdvDevice,TILT_SPEED_LVL,level.value
     }
 
     level_event[dvTp,nLevelZoom]
     {
-	send_level vdvDevice,ZOOM_SPEED_LVL,level.value
+        send_level vdvDevice,ZOOM_SPEED_LVL,level.value
     }
     
     level_event[dvTp,nLevelFocus]
     {
-	send_level vdvDevice,FOCUS_SPEED_LVL,level.value
+        send_level vdvDevice,FOCUS_SPEED_LVL,level.value
     }
 
     data_event[vdvDevice]
     {
-	command:
-	{
-	    stack_var char sFeedback[256]
-	    sFeedback = data.text
-	    select
-	    {
-		active(find_string(sFeedback,'INPUTSELECTED-',1)):
-		{
-		    remove_string(sFeedback,'INPUTSELECTED-',1)
-		}
-	    }
-	}
+        command:
+        {
+            stack_var char sFeedback[256]
+            sFeedback = data.text
+            select
+            {
+                active(find_string(sFeedback,'INPUTSELECTED-',1)):
+                {
+                    remove_string(sFeedback,'INPUTSELECTED-',1)
+                }
+            }
+        }
     }
 
     data_event[dvTp]
     {
-	online:
-	{
-	    if(bactive)
-	    {
-		fnPowerFeedback()
-	    }
-	}
+        online:
+        {
+            if(bactive)
+            {
+                fnPowerFeedback()
+            }
+        }
     }
     
     timeline_event[_TLID]
     {
-	fnFeedback()
+	    fnFeedback()
     }
 
-(***********************************************************)
-(*		    	END OF PROGRAM			   *)
-(***********************************************************) 
+(******************************************)
+(*              END OF PROGRAM            *)
+(******************************************) 
